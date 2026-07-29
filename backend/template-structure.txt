@@ -1,0 +1,33 @@
+[P] {nama_klien}
+[P] {jumlah_pax}
+[P] {tipe_tour}
+[P] {durasi}
+[P] {destinasi}
+[P] {kendaraan}
+[P] {tanggal_mulai} - {tanggal_selesai}
+[P] {bagasi}
+[P] {#city_groups}
+[P] {city} | Hari {day_start} - {day_end} - {subtitle}
+[P] {#days}
+[P] Hari {day_no} - {title}
+[P] {#activities}
+[P] {.}
+[P] {/activities}
+[P] Catatan: {notes}
+[P] Service Included: Private Vehicle
+[P] Day Price (IDR)
+[P] {#services}{description}
+[P] {price}{/services}
+[P] {/days}
+[P] {/city_groups}
+[P] Total Private Car
+[P] {total_private_car}
+[P] Total Tiket Masuk &amp; Shuttle
+[P] {total_tiket_shuttle}
+[P] Grand Total
+[P] {grand_total}
+[P] Quotation ini berlaku selama 3 hari setelah dikonfirmasi harganya.
+[P] CATATAN OPERASIONAL &amp; KETENTUAN LAYANAN
+[P] {#catatan_operasional}
+[P] {.}
+[P] {/catatan_operasional}

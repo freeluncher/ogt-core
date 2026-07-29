@@ -12,6 +12,8 @@ node_modules/
 generated/*.pdf
 generated/*.docx
 
+/*.docx
+
 # OS files
 .DS_Store
 Thumbs.db

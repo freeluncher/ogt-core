@@ -62,6 +62,11 @@ function normalizeItineraryHarian(parsed) {
         activities = item.Daftar_aktivitas.map(String).filter(s => s.trim());
       } else if (Array.isArray(item.daftar_aktivitas) && item.daftar_aktivitas.length) {
         activities = item.daftar_aktivitas.map(String).filter(s => s.trim());
+      } else if (Array.isArray(item.Aktivitas) && item.Aktivitas.length) {
+        // Varian field Siagga lain — "Aktivitas" tanpa prefix "Daftar_"
+        activities = item.Aktivitas.map(String).filter(s => s.trim());
+      } else if (Array.isArray(item.aktivitas) && item.aktivitas.length) {
+        activities = item.aktivitas.map(String).filter(s => s.trim());
       } else if (Array.isArray(item.activities) && item.activities.length) {
         activities = item.activities.map(String).filter(s => s.trim());
       } else {

@@ -27,7 +27,6 @@ const validateSecret = require('../middleware/validateSecret');
 const { parsePayload } = require('../services/parser');
 const { calculateMargin } = require('../services/marginEngine');
 const { generateDoc } = require('../services/docGenerator');
-const { convertToPdf } = require('../services/pdfConverter');
 const { uploadToStorage } = require('../services/storageUploader');
 const { getSupabaseClient } = require('../db/supabase');
 
@@ -145,14 +144,8 @@ router.post(
       });
     }
 
-    // ── Step 6: Konversi ke PDF (non-blocking) ────────────────────────────────
-    let pdfBuffer = null;
-    try {
-      pdfBuffer = await convertToPdf(docxBuffer, `${quotation_id}_itinerary`);
-    } catch (pdfErr) {
-      console.warn('[WEBHOOK] PDF conversion error (non-fatal):', pdfErr.message);
-      // Tidak fatal — lanjut dengan fallback ke .docx
-    }
+    // ── Step 6: Konversi ke PDF — NONAKTIF, langsung fallback ke .docx ───────
+    const pdfBuffer = null;
 
     // ── Step 7: Upload ke Supabase Storage ───────────────────────────────────
     let itinerary_docx_url = null;
