@@ -1,0 +1,16 @@
+{
+  "contact_name": "Monica",
+  "phone": "62812xxxxxxx",
+  "source": "ItineraryExtractor",
+  "nama_klien": "Monica",
+  "jumlah_pax": "2 Pax",
+  "tipe_tour": "Private Tour",
+  "durasi": "9 Hari (Hari 1 - Hari 9)",
+  "destinasi": "[\"Chengdu\",\"Jiuzhaigou\",\"Zhangjiajie\"]",
+  "tanggal_mulai": "",
+  "tanggal_selesai": "",
+  "kendaraan": "Private Car",
+  "bagasi": "",
+  "itinerary_harian": "[{\"hari\":\"Hari 1\",\"kegiatan\":\"Tiba di Chengdu. Airport pickup. Transfer ke hotel. Free time.\"},{\"hari\":\"Hari 2\",\"kegiatan\":\"Sarapan di hotel. Kunjungi Giant Panda Breeding Research Base. Siang: Jinli Ancient Street. Malam: Sichuan Opera show.\"},{\"hari\":\"Hari 3\",\"kegiatan\":\"Berangkat ke Jiuzhaigou dengan kendaraan private (~8 jam). Check in hotel.\"},{\"hari\":\"Hari 4\",\"kegiatan\":\"Full day tour Jiuzhaigou National Park. Five Flower Lake, Long Lake, Rize Valley.\"},{\"hari\":\"Hari 5\",\"kegiatan\":\"Pagi: Nuorilang Waterfall. Siang: kembali ke Chengdu dengan kendaraan.\"},{\"hari\":\"Hari 6\",\"kegiatan\":\"Penerbangan Chengdu – Zhangjiajie. Transfer ke hotel.\"},{\"hari\":\"Hari 7\",\"kegiatan\":\"Zhangjiajie National Forest Park. Tianmen Mountain cable car. Glass bridge.\"},{\"hari\":\"Hari 8\",\"kegiatan\":\"Avatar Hallelujah Mountain. Yuanjiajie Scenic Area.\"},{\"hari\":\"Hari 9\",\"kegiatan\":\"Check out. Transfer ke Zhangjiajie Airport. Penerbangan pulang.\"}]",
+  "catatan_operasional": "[\"Visa China diurus mandiri oleh tamu\",\"Tiket pesawat internasional tidak termasuk\",\"Hotel belum termasuk dalam paket ini\",\"Biaya masuk destinasi wisata ditanggung tamu\"]"
+}

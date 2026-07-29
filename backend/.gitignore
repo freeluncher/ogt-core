@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+
+# Environment variables — JANGAN commit file ini!
+.env
+.env.local
+.env.production
+
+# File generated — dokumen hasil generate disimpan di Supabase Storage, bukan di repo
+# CATATAN: *.docx sengaja TIDAK di-ignore secara global supaya template bisa masuk repo
+# Hanya exclude file generated di folder tertentu
+generated/*.pdf
+generated/*.docx
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Build artifacts
+dist/
