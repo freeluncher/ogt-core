@@ -5,16 +5,27 @@
  * Template: OGT_Itinerary_Quotation_Template_docxtemplater.docx
  * Sesuai §4 (step 5) PRD.
  *
- * Placeholder yang dipakai di template (format docxtemplater):
- *   {nama_klien}, {jumlah_pax}, {durasi}, {destinasi_text},
+ * Placeholder yang dipakai di template (NAMA AKTUAL — hasil debug-template.js):
+ *
+ *   Simple vars:
+ *   {nama_klien}, {jumlah_pax}, {tipe_tour}, {durasi}, {destinasi},
  *   {tanggal_mulai}, {tanggal_selesai}, {kendaraan}, {bagasi},
- *   {tipe_tour}, {quotation_id}
+ *   {total_private_car}, {total_tiket_shuttle}, {grand_total}
  *
- *   Loop tabel itinerary:
- *   {#itinerary_harian}{day_label} | {activities}{/itinerary_harian}
+ *   Loop itinerary:
+ *   {#days}
+ *     {day_no}     → label hari, contoh: "Hari 1"
+ *     {day_start}  → kota awal hari itu
+ *     {day_end}    → kota akhir hari itu (bisa sama)
+ *     {#activities}{description}{/activities}  → list kegiatan
+ *   {/days}
  *
- *   Loop line items harga:
- *   {#line_items}{item} | {harga_jual_formatted}{/line_items}
+ *   Loop harga per kota:
+ *   {#city_groups}
+ *     {city}  → nama kota
+ *     {#services}{title}{subtitle}{price}{/services}  → layanan di kota itu
+ *     {notes} → catatan kota
+ *   {/city_groups}
  *
  *   Loop catatan:
  *   {#catatan_operasional}{.}{/catatan_operasional}
@@ -60,37 +71,88 @@ function generateDoc(parsedData, marginResult, quotation_id) {
   });
 
   // ─── Data object yang dikirim ke template ─────────────────────────────────
+  // Nama field HARUS persis sama dengan placeholder di template .docx
+  // (hasil verifikasi: node debug-template.js)
+
+  // ── Bangun struktur days dari itinerary_harian ────────────────────────────
+  // Template pakai: {#days}{day_no}{day_start}{day_end}{#activities}{description}{/activities}{/days}
+  const days = (parsedData.itinerary_harian || []).map((item) => {
+    // Pisah activities: kalau ada '\n' atau '. ', jadikan array terpisah
+    const rawActivities = String(item.activities || '');
+    const activityList = rawActivities
+      .split(/\n|(?<=\.)\s+(?=[A-Z•\-])/)
+      .map(s => s.trim())
+      .filter(s => s.length > 0);
+
+    return {
+      day_no: String(item.day_label || ''),
+      day_start: String(item.day_label || '').replace(/Hari \d+\s*[|\-]?\s*/i, '').trim() || '',
+      day_end: '',
+      // {#activities}{description}{/activities}
+      activities: activityList.map(desc => ({ description: desc })),
+    };
+  });
+
+  // ── Bangun struktur city_groups dari line_items ───────────────────────────
+  // Template pakai: {#city_groups}{city}{#services}{title}{subtitle}{price}{/services}{notes}{/city_groups}
+  // Kelompokkan line_items per kota
+  const cityMap = new Map();
+  for (const item of (marginResult.line_items || [])) {
+    const kota = item.kota || 'Umum';
+    if (!cityMap.has(kota)) cityMap.set(kota, []);
+    cityMap.get(kota).push({
+      title: item.item || '',
+      subtitle: item.note || '',
+      price: item.harga_jual_formatted || 'TBD',
+    });
+  }
+  const city_groups = Array.from(cityMap.entries()).map(([city, services]) => ({
+    city,
+    services,
+    notes: '',
+  }));
+
+  // ── Total per kategori ────────────────────────────────────────────────────
+  const totalPrivateCar = marginResult.line_items
+    .filter(i => i.item && i.item.toLowerCase().includes('car'))
+    .reduce((s, i) => s + (i.harga_jual || 0), 0);
+
+  const totalTiketShuttle = marginResult.line_items
+    .filter(i => i.item && (i.item.toLowerCase().includes('tiket') || i.item.toLowerCase().includes('shuttle')))
+    .reduce((s, i) => s + (i.harga_jual || 0), 0);
+
   const templateData = {
-    // Field scalar
-    quotation_id,
+    // ── Field scalar ──────────────────────────────────────────────────────
     nama_klien: parsedData.nama_klien,
     jumlah_pax: parsedData.jumlah_pax,
     tipe_tour: parsedData.tipe_tour,
     durasi: parsedData.durasi,
-    destinasi_text: parsedData.destinasi_text,
+    destinasi: parsedData.destinasi_text,   // template pakai {destinasi} bukan {destinasi_text}
     tanggal_mulai: parsedData.tanggal_mulai,
     tanggal_selesai: parsedData.tanggal_selesai,
     kendaraan: parsedData.kendaraan,
     bagasi: parsedData.bagasi,
-    phone: parsedData.phone,
-    tanggal_generate: new Date().toLocaleDateString('id-ID', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    }),
 
-    // Loop: tabel itinerary harian
-    // Template: {#itinerary_harian}{day_label}{activities}{/itinerary_harian}
-    itinerary_harian: parsedData.itinerary_harian,
+    // ── Totals ────────────────────────────────────────────────────────────
+    total_private_car: totalPrivateCar > 0
+      ? new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(totalPrivateCar)
+      : 'TBD',
+    total_tiket_shuttle: totalTiketShuttle > 0
+      ? new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(totalTiketShuttle)
+      : 'TBD',
+    grand_total: marginResult.total_harga_formatted,
 
-    // Loop: list catatan operasional
+    // ── Loop itinerary harian ─────────────────────────────────────────────
+    // Template: {#days}{day_no}{day_start}{day_end}{#activities}{description}{/activities}{/days}
+    days,
+
+    // ── Loop harga per kota ───────────────────────────────────────────────
+    // Template: {#city_groups}{city}{#services}{title}{subtitle}{price}{/services}{notes}{/city_groups}
+    city_groups,
+
+    // ── Loop catatan operasional ──────────────────────────────────────────
     // Template: {#catatan_operasional}{.}{/catatan_operasional}
     catatan_operasional: parsedData.catatan_operasional,
-
-    // Loop: tabel harga / line items
-    // Template: {#line_items}{item}{harga_jual_formatted}{/line_items}
-    line_items: marginResult.line_items,
-    total_harga_formatted: marginResult.total_harga_formatted,
   };
 
   // Render template
