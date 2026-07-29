@@ -35,11 +35,13 @@ app.use((req, res) => {
 });
 
 // ================================
-// Start server
+// Start server (hanya jika dijalankan langsung, bukan via Vercel)
 // ================================
-app.listen(PORT, () => {
-  console.log(`[OGT Webhook Backend] Server berjalan di port ${PORT}`);
-  console.log(`[OGT Webhook Backend] Health check: http://localhost:${PORT}/api/health`);
-});
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`[OGT Webhook Backend] Server berjalan di port ${PORT}`);
+    console.log(`[OGT Webhook Backend] Health check: http://localhost:${PORT}/api/health`);
+  });
+}
 
 module.exports = app;
