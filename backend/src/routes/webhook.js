@@ -54,20 +54,20 @@ async function updateSubmission(id, updates) {
   if (error) console.error(`[DB] Update gagal untuk id=${id}:`, error.message);
 }
 
-/** Cocokkan assigned_sales (nama, dari payload Siagga) ke row sales aktif. Null kalau tidak match. */
-async function matchSalesId(assignedSalesName) {
-  if (!assignedSalesName) return null;
+/** Cocokkan assigned_sales_email (dari payload Siagga, field Assigned_Sales_Email) ke row sales aktif. Null kalau tidak match. */
+async function matchSalesId(assignedSalesEmail) {
+  if (!assignedSalesEmail) return null;
 
   const supabase = getSupabaseClient();
   const { data, error } = await supabase
     .from('sales')
-    .select('id, name')
+    .select('id, email')
     .eq('is_active', true);
 
   if (error || !data) return null;
 
   const match = data.find(
-    (s) => s.name.trim().toLowerCase() === String(assignedSalesName).trim().toLowerCase()
+    (s) => s.email.trim().toLowerCase() === String(assignedSalesEmail).trim().toLowerCase()
   );
   return match ? match.id : null;
 }
@@ -92,7 +92,7 @@ router.post(
     const { parsed, parseFailed, failedFields, errors } = parsePayload(body);
 
     // ── Step 2: Match sales pemilik submission (kalau ada field-nya) ─────────
-    const sales_id = await matchSalesId(parsed.assigned_sales);
+    const sales_id = await matchSalesId(parsed.assigned_sales_email);
 
     // ── Step 3: Simpan raw ke DB (audit trail) — WAJIB untuk semua request ───
     try {

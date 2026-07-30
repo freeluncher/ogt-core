@@ -146,9 +146,9 @@ function parsePayload(body) {
 
   // ── Field scalar ───────────────────────────────────────────────────────────
   const parsed = {
-    contact_name:    body.contact_name    || PLACEHOLDER_KOSONG,
-    phone:           body.phone           || PLACEHOLDER_KOSONG,
-    assigned_sales:  body.assigned_sales  || null,
+    contact_name:         body.contact_name         || PLACEHOLDER_KOSONG,
+    phone:                body.phone                || PLACEHOLDER_KOSONG,
+    assigned_sales_email: body.assigned_sales_email || null,
     nama_klien:      body.nama_klien      || PLACEHOLDER_KOSONG,
     jumlah_pax:      body.jumlah_pax      || PLACEHOLDER_KOSONG,
     tipe_tour:       body.tipe_tour       || PLACEHOLDER_KOSONG,

@@ -5,6 +5,26 @@
     { "src": "frontend/package.json", "use": "@vercel/next" }
   ],
   "routes": [
-    { "src": "/api/(.*)", "dest": "backend/src/index.js" }
+    { "src": "/api/(.*)", "dest": "backend/src/index.js" },
+
+    { "src": "/_next/(.*)", "dest": "frontend/_next/$1" },
+    { "src": "/favicon.ico", "dest": "frontend/favicon.ico" },
+
+    { "src": "/", "has": [{ "type": "header", "key": "RSC" }], "dest": "frontend/index.rsc" },
+    { "src": "/", "dest": "frontend/index" },
+
+    { "src": "/login", "has": [{ "type": "header", "key": "RSC" }], "dest": "frontend/login.rsc" },
+    { "src": "/login", "dest": "frontend/login" },
+
+    { "src": "/submissions", "has": [{ "type": "header", "key": "RSC" }], "dest": "frontend/submissions.rsc" },
+    { "src": "/submissions", "dest": "frontend/submissions" },
+
+    { "src": "/submissions/([^/]+)", "has": [{ "type": "header", "key": "RSC" }], "dest": "frontend/submissions/[id].rsc" },
+    { "src": "/submissions/([^/]+)", "dest": "frontend/submissions/[id]" },
+
+    { "handle": "filesystem" },
+
+    { "src": "/(.*)", "has": [{ "type": "header", "key": "RSC" }], "dest": "frontend/_not-found.rsc" },
+    { "src": "/(.*)", "dest": "frontend/_not-found" }
   ]
 }

@@ -16,6 +16,7 @@
  *       Hari {day_no} - {title}
  *       {#activities}{.}{/activities}      ← array of plain strings
  *       Catatan: {notes}
+ *       Service Included: {service_summary}    ← nama service unik hari ini, bukan hardcode
  *       {#services}{description}{price}{/services}
  *     {/days}
  *   {/city_groups}
@@ -116,16 +117,23 @@ function generateDoc(parsedData, marginResult, quotation_id) {
     const dayStart   = firstDay ? firstDay.day_no : '';
     const dayEnd     = lastDay  ? lastDay.day_no  : dayStart;
 
-    const days = kotaDays.map(day => ({
-      day_no:     day.day_no,                              // {day_no}
-      title:      day.judul || kota,                       // {title} = judul hari
-      activities: day.activities || [],                    // {#activities}{.}{/activities}
-      notes:      '',                                      // {notes}
-      services:   [                                        // {#services}{description}{price}
+    const days = kotaDays.map(day => {
+      const services = [                                    // {#services}{description}{price}
         ...(servicesByKotaWide.get(kota) || []),
         ...(servicesByKotaDay.get(`${kota}|${day.day_no}`) || []),
-      ],
-    }));
+      ];
+      // Header "Service Included: ..." — nama service unik hari ini, bukan hardcode "Private Vehicle"
+      const service_summary = [...new Set(services.map(s => s.description).filter(Boolean))].join(', ') || 'TBD';
+
+      return {
+        day_no:     day.day_no,                             // {day_no}
+        title:      day.judul || kota,                      // {title} = judul hari
+        activities: day.activities || [],                   // {#activities}{.}{/activities}
+        notes:      '',                                     // {notes}
+        services,
+        service_summary,                                    // {service_summary}
+      };
+    });
 
     return {
       city:      kota,                                     // {city}
