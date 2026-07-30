@@ -15,8 +15,9 @@ Backend ini menerima webhook JSON dari flow Siagga `ItineraryExtractor` (hasil e
 - Endpoint: `POST /api/webhooks/itinerary-json`
 - Header wajib divalidasi: `X-Webhook-Secret` (401 kalau salah/kosong)
 - Body: field-field dari Siagga SELALU berupa string, termasuk yang isinya JSON (`destinasi`, `itinerary_harian`, `catatan_operasional`) — WAJIB `JSON.parse()` dengan try/catch, jangan asumsikan sudah berbentuk array/object.
-- Response sukses: `{status:"ok", quotation_id, itinerary_pdf_url, quotation_pdf_url}`
+- **MVP2:** Response sukses SUDAH BUKAN `{itinerary_pdf_url, quotation_pdf_url}` lagi — webhook tidak generate dokumen langsung. Response sekarang: `{status:"ok", quotation_id, submission_id, review_status:"pending_review"}`. Generate dokumen dipindah ke `POST /api/quotations/:id/generate` (endpoint baru, butuh Supabase JWT sales, beda auth dari webhook). Detail di PRD.md §11.
 - Response gagal: HTTP 422 (payload invalid) atau 500 (error internal), body `{status:"error", message, raw_field?}`
+- Endpoint baru MVP2 (`/api/submissions`, `/api/quotations/:id`, `/api/quotations/:id/generate`, `/api/services-catalog`) pakai `middleware/requireAuth.js` (verifikasi Supabase JWT + lookup tabel `sales`) — JANGAN pakai `validateSecret` (X-Webhook-Secret) di endpoint ini, itu khusus webhook Siagga.
 
 ## Aturan Data & Error Handling
 - Field bisa datang kosong (`tanggal_mulai`, `bagasi` sering kosong) — JANGAN gagalkan request karena field kosong, isi placeholder `"(belum diisi)"` di dokumen dan tetap lanjut proses.
@@ -35,9 +36,9 @@ Backend ini menerima webhook JSON dari flow Siagga `ItineraryExtractor` (hasil e
 - Selalu sediakan `GET /api/health` yang merespons 200 — dipakai untuk ping supaya Render free tier tidak sleep saat demo.
 
 ## Batasan Fase MVP — JANGAN over-engineer
-Sesuai §9 PRD, hal-hal ini SENGAJA belum dibangun, jangan ditambahkan kecuali diminta eksplisit:
-- Approval workflow / multi-role auth
-- UI admin untuk edit `margin_rules` (edit manual lewat Supabase Table Editor)
+Sesuai §9/§11 PRD, hal-hal ini SENGAJA belum dibangun, jangan ditambahkan kecuali diminta eksplisit:
+- ~~Approval workflow~~ / ~~UI edit harga~~ — SUDAH ada di MVP2 (web app quotation builder, PRD §11). Yang MASIH belum dibangun: multi-role admin (founder vs sales), edit `services_catalog` lewat UI (masih manual via Supabase Table Editor).
+- AI/LLM buat suggest service — saran line item MVP2 murni rule-based (`serviceSuggester.js`), BUKAN AI. Jangan ganti ke AI-generated pricing tanpa diskusi eksplisit — itu keputusan sadar (lihat plan "Web App Quotation Builder", alasan: harga customer-facing, AI rawan salah & tidak auditable).
 - Retry otomatis webhook
 - Multi-currency (IDR saja)
 

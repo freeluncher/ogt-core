@@ -54,12 +54,14 @@ Body (persis seperti yang dikirim Siagga):
 
 ### 2.2 Response (sukses)
 
+**Update MVP2 (lihat plan "Web App Quotation Builder — Sales UI"):** webhook TIDAK lagi generate dokumen secara langsung. Ia cuma parse+simpan submission, jalankan saran harga otomatis (rule-based, `serviceSuggester.js`), simpan sebagai draft `quotations`, lalu berhenti — tidak ada URL dokumen di response ini lagi. Generate dokumen dipindah ke `POST /api/quotations/:id/generate`, dipicu sales dari web app setelah review/edit harga (lihat §11).
+
 ```json
 {
   "status": "ok",
   "quotation_id": "q_abc123",
-  "itinerary_pdf_url": "https://.../itinerary_monica.pdf",
-  "quotation_pdf_url": "https://.../quotation_monica.pdf"
+  "submission_id": "uuid-itinerary-submissions",
+  "review_status": "pending_review"
 }
 ```
 
@@ -204,11 +206,37 @@ Field `destinasi`, `itinerary_harian`, `catatan_operasional` disimpan sebagai `j
 
 ## 9. Batasan Fase MVP (Out of Scope Dulu)
 
-- Tidak ada approval Founder / workflow revisi (masih manual via WhatsApp/Siagga seperti sekarang).
-- Tidak ada UI admin untuk edit `margin_rules` — edit langsung lewat Supabase Table Editor.
+> **Update MVP2:** dua poin pertama di bawah ini SUDAH dibangun di MVP2 (lihat §11) — approval sekarang berupa review harga oleh sales sebelum generate, dan `services_catalog` menggantikan edit manual `margin_rules` lewat UI web app. Sisanya masih berlaku.
+
+- ~~Tidak ada approval Founder / workflow revisi~~ — MVP2: sales review & edit harga di web app sebelum generate (human-in-the-loop, lihat §11).
+- ~~Tidak ada UI admin untuk edit `margin_rules`~~ — MVP2: sales pilih dari `services_catalog` lewat UI quotation builder (edit katalog itu sendiri masih manual lewat Supabase Table Editor).
 - Tidak ada retry otomatis kalau webhook gagal — Sales perlu re-trigger manual (ubah lalu ubah balik value `Itinerary_file`, atau sediakan tombol "Retry" sederhana di fase 2).
 - Tidak menangani multi-currency (IDR saja dulu, sesuai PRD utama §7).
-- LibreOffice/Gotenberg convert-to-PDF bisa lambat di free tier (cold start) — untuk testing ini diterima, dioptimasi saat production.
+- LibreOffice/Gotenberg convert-to-PDF bisa lambat di free tier (cold start) — untuk testing ini diterima, dioptimasi saat production. (Catatan: konversi PDF via CloudConvert sudah dinonaktifkan sementara — backend upload `.docx` langsung.)
+
+---
+
+## 11. MVP2 — Web App Quotation Builder (Sales UI)
+
+**Kenapa:** 3 sales pegang customer masing-masing dari Siagga CRM. Setelah itinerary final disetujui customer, sales perlu generate quotation — tapi harga TIDAK boleh auto-generate tanpa dicek manusia (kerugian bisnis kalau salah). Lihat detail keputusan arsitektur (kenapa bukan AI/RAG di sisi Siagga) di plan implementasi.
+
+**Perubahan alur dari §3-4 di atas:**
+1. Webhook (§2) tetap terima & parse payload Siagga, TIDAK berubah caranya.
+2. Webhook berhenti setelah simpan submission + jalankan saran harga otomatis rule-based (`serviceSuggester.js`, berdasarkan `services_catalog` + heuristik `PRICING_RULES.md`) → simpan sebagai `quotations` row `status='draft'`. TIDAK generate dokumen di titik ini lagi (§2.2 di atas).
+3. Sales login ke web app (Supabase Auth), buka submission miliknya, review/edit line item harga.
+4. Sales klik "Generate" → `POST /api/quotations/:id/generate` → backend hitung ulang total (tidak percaya angka dari client), panggil `docGenerator.js` (tidak berubah) + upload ke Storage (tidak berubah).
+5. Submission `status` jadi `processed`, quotation `status` jadi `generated`, URL dokumen tersimpan di `quotations.quotation_docx_url`.
+
+**Tabel baru:** `sales`, `services_catalog` (pengganti `margin_rules` utk pricing operasional — `margin_rules` dibiarkan ada tapi deprecated), `quotations`. Lihat `backend/migrations/002_sales_quotations_catalog.sql`.
+
+**Endpoint baru (butuh Supabase JWT sales, beda dari `X-Webhook-Secret`):**
+- `GET /api/submissions?scope=mine|unassigned|all&status=`
+- `GET /api/submissions/:id`
+- `PUT /api/quotations/:id` — simpan edit line items
+- `POST /api/quotations/:id/generate`
+- `GET /api/services-catalog`
+
+**Deploy:** frontend (`frontend/`, Next.js) & backend (`backend/`, Express — tidak berubah struktur) digabung jadi **satu Vercel project** lewat root `vercel.json` monorepo config, bukan dua deployment terpisah. Lihat `DEPLOY-VERCEL.md`.
 
 ---
 

@@ -60,15 +60,26 @@ function generateDoc(parsedData, marginResult, quotation_id) {
     nullGetter:    () => '',
   });
 
-  // ─── Kelompokkan services per kota dari line_items ─────────────────────────
-  const servicesByKota = new Map();
+  // ─── Kelompokkan services per kota (+ per hari kalau item punya day_no) ────
+  // Line item dari serviceSuggester/quotation builder punya `day_no` (spesifik
+  // per hari — mis. Tour Guide cuma di hari yang butuh, bukan di arrival day).
+  // Line item lama tanpa `day_no` (marginEngine lama / item manual tanpa hari
+  // spesifik) tetap tampil di SEMUA hari kota itu, sama seperti perilaku lama.
+  const servicesByKotaDay  = new Map(); // key: `${kota}|${day_no}`
+  const servicesByKotaWide = new Map(); // key: kota — item tanpa day_no
+
   for (const item of (marginResult.line_items || [])) {
     const kota = item.kota || 'Umum';
-    if (!servicesByKota.has(kota)) servicesByKota.set(kota, []);
-    servicesByKota.get(kota).push({
-      description: item.item || '',
-      price:       item.harga_jual_formatted || 'TBD',
-    });
+    const entry = { description: item.item || '', price: item.harga_jual_formatted || 'TBD' };
+
+    if (item.day_no !== undefined && item.day_no !== null && item.day_no !== '') {
+      const key = `${kota}|${item.day_no}`;
+      if (!servicesByKotaDay.has(key)) servicesByKotaDay.set(key, []);
+      servicesByKotaDay.get(key).push(entry);
+    } else {
+      if (!servicesByKotaWide.has(kota)) servicesByKotaWide.set(kota, []);
+      servicesByKotaWide.get(kota).push(entry);
+    }
   }
 
   // ─── Kelompokkan hari per kota ─────────────────────────────────────────────
@@ -110,7 +121,10 @@ function generateDoc(parsedData, marginResult, quotation_id) {
       title:      day.judul || kota,                       // {title} = judul hari
       activities: day.activities || [],                    // {#activities}{.}{/activities}
       notes:      '',                                      // {notes}
-      services:   servicesByKota.get(kota) || [],          // {#services}{description}{price}
+      services:   [                                        // {#services}{description}{price}
+        ...(servicesByKotaWide.get(kota) || []),
+        ...(servicesByKotaDay.get(`${kota}|${day.day_no}`) || []),
+      ],
     }));
 
     return {

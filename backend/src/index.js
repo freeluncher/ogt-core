@@ -3,6 +3,7 @@ const express = require('express');
 
 const healthRouter = require('./routes/health');
 const webhookRouter = require('./routes/webhook');
+const quotationsRouter = require('./routes/quotations');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -15,6 +16,7 @@ app.use(express.json({ limit: '10mb' }));
 // ================================
 app.use('/api/health', healthRouter);
 app.use('/api/webhooks', webhookRouter);
+app.use('/api', quotationsRouter);
 
 // ================================
 // Global Error Handler
